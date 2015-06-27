@@ -39,6 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "frsky.h"
 
+
+const float MIN_VOLTAGE = 10.5;
+
 #define DEBUG 1
 #define debug_print(fmt, ...) \
             do { if (DEBUG) fprintf(stderr, fmt, __VA_ARGS__); } while (0)
@@ -60,9 +63,10 @@ float heading = -1;
 float speed = -1;
 
 
-void frsky_interpret_packet(void) {
+int frsky_interpret_packet(void) {
 	//printf("%x\n", pkg[0]);
 	uint16_t data;
+	int new_data = 1;
 
 	data = *(uint16_t*)(pkg+1);
 	switch(pkg[0]) {
@@ -115,69 +119,137 @@ void frsky_interpret_packet(void) {
 			break;
 
 		default:
+			new_data = 0;
 			//printf("%x\n", pkg[0]);
 		break;
 	}
+
+	return new_data;
 }
 
-void parse_frsky_buffer(uint8_t ch) {
-	//printf("parse %x state %d\n", ch, sm_state);
-	switch(sm_state) {
-		case 0:
-			if(ch == 0x5e)
-				sm_state = 1;
+int parse_frsky_buffer(uint8_t *buf, int buflen) {
+	int new_data = 0;
+
+
+	int i;
+	for(i=0; i<buflen; ++i) {
+		uint8_t ch = buf[i];
+		//printf("parse %x state %d\n", ch, sm_state);
+		switch(sm_state) {
+			case 0:
+				if(ch == 0x5e)
+					sm_state = 1;
+				break;
+
+			case 1:
+				if(ch == 0x5e)
+					sm_state = 2;
+				else
+					sm_state = 0;
+				break;
+			
+			case 2:
+				if(ch == 0x5e) {
+					pkg_pos = 0;
+					new_data = new_data | frsky_interpret_packet();
+				}
+				else {
+					if(pkg_pos >= sizeof(pkg)) {
+						pkg_pos = 0;
+						sm_state = 0;
+					} else {
+						pkg[pkg_pos] = ch;
+						pkg_pos++;
+					}
+				}
 			break;
 
-		case 1:
-			if(ch == 0x5e)
-				sm_state = 2;
-			else
+			default:
 				sm_state = 0;
 			break;
-		
-		case 2:
-			if(ch == 0x5e) {
-				pkg_pos = 0;
-				frsky_interpret_packet();
-			}
-			else {
-				if(pkg_pos >= sizeof(pkg)) {
-					pkg_pos = 0;
-					sm_state = 0;
-				} else {
-					pkg[pkg_pos] = ch;
-					pkg_pos++;
-				}
-			}
-		break;
-
-		default:
-			sm_state = 0;
-		break;
+		}
 	}
+
+	return new_data;
 }
 
+
+
+
+void render_text(char *text, GRAPHICS_RESOURCE_HANDLE *img, int x, int y, int fsize, uint8_t r, uint8_t g, uint8_t b) {
+	graphics_resource_render_text_ext(*img, x, y,
+	GRAPHICS_RESOURCE_WIDTH,
+	GRAPHICS_RESOURCE_HEIGHT,
+	GRAPHICS_RGBA32(b,g,r, 0xff), /* fg */
+	GRAPHICS_RGBA32(0,0,0,0x80), /* bg */
+	text, strlen(text), fsize);
+
+}
+
+void render(GRAPHICS_RESOURCE_HANDLE *img, int width, int height) {
+	char text[256];
+	int text_y = height - 30;
+
+
+	graphics_resource_fill(*img, 0, 0, width, height, GRAPHICS_RGBA32(0,0,0,0x00));
+
+//green line
+graphics_resource_fill(*img, 0, height-40, width, 1, GRAPHICS_RGBA32(0,0xff,0,0xff));
+
+	
+
+
+
+	sprintf(text, "%.2fV", voltage);
+	render_text(text, img, 2, text_y, 20, 0xff, voltage<MIN_VOLTAGE?0:0xff, voltage<MIN_VOLTAGE?0:0xff);
+	
+	sprintf(text, "%dm", (int)altitude);
+	render_text(text, img, 120, text_y, 20, 0xff, 0xff, 0xff);
+
+	sprintf(text, "%dkm/h", (int)speed);
+	render_text(text, img, 220, text_y, 20, 0xff, 0xff, 0xff);
+
+	sprintf(text, "%d deg", (int)heading);
+	render_text(text, img, 320, text_y, 20, 0xff, 0xff, 0xff);
+
+	sprintf(text, "%f", latitude);
+	render_text(text, img, 420, text_y, 20, 0xff, 0xff, 0xff);
+
+	sprintf(text, "%f", longitude);
+	render_text(text, img, 620, text_y, 20, 0xff, 0xff, 0xff);
+
+
+graphics_update_displayed_resource(*img, 0, 0, 0, 0);
+
+}
+
+/*
+double longitude = 0.0;
+double latitude = 0.0;
+
+float heading = -1;
+
+float speed = -1;
+*/
 
 
 int main(void) {
 	GRAPHICS_RESOURCE_HANDLE img;
 	uint32_t width, height;
-	int LAYER=1;
-	bcm_host_init();
-	int s;
-
+	const int LAYER=1;
 	uint8_t buf[256];
 	size_t n;
 
+	bcm_host_init();
 	gx_graphics_init(".");
 	graphics_get_display_size(0, &width, &height);
 	gx_create_window(0, width, height, GRAPHICS_RESOURCE_RGBA32, &img);
+
+
 	// transparent before display to avoid screen flash
 	graphics_resource_fill(img, 0, 0, width, height, GRAPHICS_RGBA32(0,0,0,0x00));
 	graphics_display_resource(img, 0, LAYER, 0, 0, GRAPHICS_RESOURCE_WIDTH, GRAPHICS_RESOURCE_HEIGHT, VC_DISPMAN_ROT0, 1);
 
-graphics_resource_fill(img, 0, height-40, width, 1, GRAPHICS_RGBA32(0,0xff,0,0xff));
-graphics_update_displayed_resource(img, 0, 0, 0, 0);
 
 
 	for(;;) {
@@ -192,9 +264,10 @@ graphics_update_displayed_resource(img, 0, 0, 0, 0);
 			exit(-1);
 		}
 
-		int i;
-		for(i=0; i<n; ++i)
-			parse_frsky_buffer(buf[i]);
+		if(parse_frsky_buffer(buf, n)) {
+			render(&img, width, height);
+		}
+
 
 	}
 
