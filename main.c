@@ -32,15 +32,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdio.h>
 
+//#define RENDER 1
 
+
+
+#ifdef RENDER
 #include "bcm_host.h"
 #include "vgfont.h"
-
+#endif
 
 #include "frsky.h"
 
 
 const float MIN_VOLTAGE = 10.5;
+
+
 
 #define DEBUG 1
 #define debug_print(fmt, ...) \
@@ -175,7 +181,7 @@ int parse_frsky_buffer(uint8_t *buf, int buflen) {
 
 
 
-
+#ifdef RENDER
 void render_text(char *text, GRAPHICS_RESOURCE_HANDLE *img, int x, int y, int fsize, uint8_t r, uint8_t g, uint8_t b) {
 	graphics_resource_render_text_ext(*img, x, y,
 	GRAPHICS_RESOURCE_WIDTH,
@@ -222,22 +228,16 @@ graphics_resource_fill(*img, 0, height-40, width, 1, GRAPHICS_RGBA32(0,0xff,0,0x
 graphics_update_displayed_resource(*img, 0, 0, 0, 0);
 
 }
-
-/*
-double longitude = 0.0;
-double latitude = 0.0;
-
-float heading = -1;
-
-float speed = -1;
-*/
+#endif
 
 
 int main(int argc, char *argv[]) {
+#ifdef RENDER
 	GRAPHICS_RESOURCE_HANDLE img;
 	uint32_t width, height;
 	const int LAYER=1;
-	uint8_t buf[256];
+#endif
+uint8_t buf[256];
 	size_t n;
 
 	if(argc != 2) {
@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-
+#ifdef RENDER
 	bcm_host_init();
 	gx_graphics_init(argv[1]);
 	graphics_get_display_size(0, &width, &height);
@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
 	// transparent before display to avoid screen flash
 	graphics_resource_fill(img, 0, 0, width, height, GRAPHICS_RGBA32(0,0,0,0x00));
 	graphics_display_resource(img, 0, LAYER, 0, 0, GRAPHICS_RESOURCE_WIDTH, GRAPHICS_RESOURCE_HEIGHT, VC_DISPMAN_ROT0, 1);
-
+#endif
 
 
 	for(;;) {
@@ -271,8 +271,10 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(parse_frsky_buffer(buf, n)) {
-			render(&img, width, height);
-		}
+#ifdef RENDER
+	render(&img, width, height);
+#endif
+	}
 
 
 	}
