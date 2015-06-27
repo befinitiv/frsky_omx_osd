@@ -233,15 +233,21 @@ float speed = -1;
 */
 
 
-int main(void) {
+int main(int argc, char *argv[]) {
 	GRAPHICS_RESOURCE_HANDLE img;
 	uint32_t width, height;
 	const int LAYER=1;
 	uint8_t buf[256];
 	size_t n;
 
+	if(argc != 2) {
+		printf("Usage: %s <font path>\n",argv[0]);
+		return 1;
+	}
+
+
 	bcm_host_init();
-	gx_graphics_init(".");
+	gx_graphics_init(argv[1]);
 	graphics_get_display_size(0, &width, &height);
 	gx_create_window(0, width, height, GRAPHICS_RESOURCE_RGBA32, &img);
 
