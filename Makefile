@@ -12,8 +12,13 @@ vgfont:
 	cp $(HELLOFONTPATH)/Vera.ttf .
 	make -C $(VGFONTPATH)
 
-frsky_omx_osd: vgfont main.c
-	gcc -Wall $(CPPFLAGS) main.c -o frsky_omx_osd $(LDFLAGS)
+
+
+%.o: %.c
+	gcc -c -o $@ $< $(CPPFLAGS)
+
+frsky_omx_osd: vgfont main.o frsky.o render.o
+	gcc -o $@ $^ $(LDFLAGS)
 
 
 clean:

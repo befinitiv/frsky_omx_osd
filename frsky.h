@@ -1,3 +1,10 @@
+#pragma once
+
+
+#include "telemetry.h"
+
+
+
 // Data Ids (bp = before decimal point; af = after decimal point)
 // Official data IDs
 #define ID_GPS_ALTIDUTE_BP 0x01
@@ -35,5 +42,16 @@
 #define ID_GYRO_Y 0x41
 #define ID_GYRO_Z 0x42
 #define ID_VERT_SPEED 0x30 //opentx vario
+
+
+typedef struct {
+	int sm_state;
+	uint8_t pkg[64];
+	int pkg_pos;
+} frsky_state_t;
+
+
+int frsky_interpret_packet(frsky_state_t *state, telemetry_data_t *td);
+int frsky_parse_buffer(frsky_state_t *state, telemetry_data_t *td, uint8_t *buf, int buflen);
 
 
