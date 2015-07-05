@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-//#define RENDER 1
+#define RENDER 1
 
 
 
