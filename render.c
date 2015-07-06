@@ -1,11 +1,15 @@
+#include <stdint.h>
+
 #include "conf.h"
 
+
+#include "render.h"
 #include "telemetry.h"
 
 #ifdef RENDER
 
 const float MIN_VOLTAGE = 10.5;
-
+const int LAYER = 1;
 
 void render_init(render_data_t *rd, char *font_path) {
 	bcm_host_init();
@@ -19,7 +23,7 @@ void render_init(render_data_t *rd, char *font_path) {
 }
 
 void render_text(char *text, render_data_t *rd, int x, int y, int fsize, uint8_t r, uint8_t g, uint8_t b) {
-	graphics_resource_render_text_ext(*rd->img, x, y,
+	graphics_resource_render_text_ext(rd->img, x, y,
 	GRAPHICS_RESOURCE_WIDTH,
 	GRAPHICS_RESOURCE_HEIGHT,
 	GRAPHICS_RGBA32(b,g,r, 0xff), /* fg */
@@ -33,10 +37,10 @@ void render(telemetry_data_t *td, render_data_t *rd) {
 	int text_y = rd->height - 30;
 
 
-	graphics_resource_fill(*rd->img, 0, 0, rd->width, rd->height, GRAPHICS_RGBA32(0,0,0,0x00));
+	graphics_resource_fill(rd->img, 0, 0, rd->width, rd->height, GRAPHICS_RGBA32(0,0,0,0x00));
 
 	//green line
-	//graphics_resource_fill(*img, 0, height-40, width, 1, GRAPHICS_RGBA32(0,0xff,0,0xff));
+	//graphics_resource_fill(rd->img, 0, height-40, width, 1, GRAPHICS_RGBA32(0,0xff,0,0xff));
 
 	
 	sprintf(text, "%.2fV", td->voltage);
@@ -58,7 +62,7 @@ void render(telemetry_data_t *td, render_data_t *rd) {
 	render_text(text, rd, 620, text_y, 20, 0xff, 0xff, 0xff);
 
 
-	graphics_update_displayed_resource(*rd->img, 0, 0, 0, 0);
+	graphics_update_displayed_resource(rd->img, 0, 0, 0, 0);
 
 }
 #endif

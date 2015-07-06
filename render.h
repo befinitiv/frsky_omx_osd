@@ -2,6 +2,12 @@
 
 #ifdef RENDER
 
+#include "bcm_host.h"
+#include "vgfont.h"
+
+
+#include "telemetry.h"
+
 typedef struct {
 	GRAPHICS_RESOURCE_HANDLE img;
 	uint32_t width;

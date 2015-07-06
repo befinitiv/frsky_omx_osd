@@ -35,15 +35,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "conf.h"
 
-#ifdef RENDER
-#include "bcm_host.h"
-#include "vgfont.h"
-#endif
-
 
 
 #include "telemetry.h"
 #include "frsky.h"
+#include "render.h"
 
 
 

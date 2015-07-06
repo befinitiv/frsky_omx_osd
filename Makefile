@@ -6,7 +6,7 @@ CPPFLAGS+= -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads -I/opt/v
 LDFLAGS+= -L$(VGFONTPATH) -lvgfont -lfreetype -lz
 LDFLAGS+=-L/opt/vc/lib/ -lGLESv2 -lEGL -lopenmaxil -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt -lm
 
-all: frsky_omx_osd
+all: vgfont frsky_omx_osd
 
 vgfont:
 	cp $(HELLOFONTPATH)/Vera.ttf .
@@ -17,11 +17,11 @@ vgfont:
 %.o: %.c
 	gcc -c -o $@ $< $(CPPFLAGS)
 
-frsky_omx_osd: vgfont main.o frsky.o render.o
+frsky_omx_osd: main.o frsky.o render.o
 	gcc -o $@ $^ $(LDFLAGS)
 
 
 clean:
-	rm -f frsky_omx_osd *~
+	rm -f frsky_omx_osd *.o *~
 
 
