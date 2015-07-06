@@ -34,7 +34,7 @@ void render_text(char *text, render_data_t *rd, int x, int y, int fsize, uint8_t
 
 void render(telemetry_data_t *td, render_data_t *rd) {
 	char text[256];
-	int text_y = rd->height - 30;
+	int text_y = rd->height - RENDER_OFFSET_Y;
 
 
 	graphics_resource_fill(rd->img, 0, 0, rd->width, rd->height, GRAPHICS_RGBA32(0,0,0,0x00));
@@ -44,22 +44,22 @@ void render(telemetry_data_t *td, render_data_t *rd) {
 
 	
 	sprintf(text, "%.2fV", td->voltage);
-	render_text(text, rd, 2, text_y, 20, 0xff, td->voltage<MIN_VOLTAGE?0:0xff, td->voltage<MIN_VOLTAGE?0:0xff);
+	render_text(text, rd, RENDER_OFFSET_X, text_y, RENDER_FONT_SIZE, 0xff, td->voltage<MIN_VOLTAGE?0:0xff, td->voltage<MIN_VOLTAGE?0:0xff);
 	
 	sprintf(text, "%dm", (int)td->altitude);
-	render_text(text, rd, 120, text_y, 20, 0xff, 0xff, 0xff);
+	render_text(text, rd, RENDER_OFFSET_X + 1 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 	sprintf(text, "%dkm/h", (int)td->speed);
-	render_text(text, rd, 220, text_y, 20, 0xff, 0xff, 0xff);
+	render_text(text, rd, RENDER_OFFSET_X + 2 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 	sprintf(text, "%d deg", (int)td->heading);
-	render_text(text, rd, 320, text_y, 20, 0xff, 0xff, 0xff);
+	render_text(text, rd, RENDER_OFFSET_X + 3 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 	sprintf(text, "%f", td->latitude);
-	render_text(text, rd, 420, text_y, 20, 0xff, 0xff, 0xff);
+	render_text(text, rd, RENDER_OFFSET_X + 4 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 	sprintf(text, "%f", td->longitude);
-	render_text(text, rd, 620, text_y, 20, 0xff, 0xff, 0xff);
+	render_text(text, rd, RENDER_OFFSET_X + 6 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 
 	graphics_update_displayed_resource(rd->img, 0, 0, 0, 0);
