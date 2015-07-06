@@ -1,0 +1,24 @@
+This application parses a binary FrSky telemetry stream and displays the data onto the screen (currently voltage, height, orientation, lat, long).
+
+The application is intended to run on a Raspberry PI since it uses Broadcom specific functions for drawing onto the screen.
+The rendering however can easily be disabled by commenting the "#define RENDER 1" line in the conf.h file.
+In that case the values will only be printed to the console.
+
+
+Usage: ./frsky_omx_osd <font path>
+
+The font path should be a directory containing a .ttf file that will be used as a font.
+The binary FrSky data will be read on stdin. You could do something like this:
+
+cat /dev/ttyUSB0 | ./frsky_omx_osd .
+
+or (in case you are using wifibroadcast):
+
+/home/pi/wifibroadcast/rx -p 1 -b 4 wlan0 | ./frsky_omx_osd .
+
+
+To test the application offline a FrSky telemetry log is provided in this repository:
+
+./frsky_omx_osd . < testlog.frsky
+ 
+
