@@ -62,6 +62,15 @@ void render(telemetry_data_t *td, render_data_t *rd) {
 	render_text(text, rd, RENDER_OFFSET_X + 6 * RENDER_SPACING, text_y, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 
 
+	if(td->rx_status != NULL) {
+		int i;
+		int ac = td->rx_status->wifi_adapter_cnt;
+		for(i=0; i<ac; ++i) {
+			sprintf(text, "c%d: %ddBm", i, td->rx_status->adapter[i].current_signal_dbm);
+			render_text(text, rd, RENDER_OFFSET_X + 8 * RENDER_SPACING, text_y - (ac-1) * 1 * RENDER_FONT_SIZE + i * RENDER_FONT_SIZE, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
+		}
+	}
+			
 	graphics_update_displayed_resource(rd->img, 0, 0, 0, 0);
 
 }

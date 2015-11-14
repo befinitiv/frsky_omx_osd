@@ -31,7 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/select.h>
 
 #include "conf.h"
 
@@ -49,11 +52,15 @@ int main(int argc, char *argv[]) {
 	render_data_t rd;
 	#endif
 
+
+	fd_set set;
+  	struct timeval timeout;
+ 
 	uint8_t buf[256];
 	size_t n;
 	frsky_state_t fs;
 	telemetry_data_t td;
-
+	telemetry_init(&td);
 
 	if(argc != 2) {
 		printf("Usage: %s <font path>\n",argv[0]);
@@ -65,19 +72,33 @@ int main(int argc, char *argv[]) {
 	#endif
 
 
+
 	for(;;) {
-		n = read(STDIN_FILENO, buf, sizeof(buf));
+		FD_ZERO(&set);
+		FD_SET(STDIN_FILENO, &set);
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 5e5;
+		n = select(STDIN_FILENO + 1, &set, NULL, NULL, &timeout);
+printf("%d\n",n);
+		if(n > 0) {
+			n = read(STDIN_FILENO, buf, sizeof(buf));
 
-		if(n == 0) {
-		//	break; //EOF
+			if(n == 0) {
+			//	break; //EOF
+			}
+
+			if(n<0) {
+				perror("read");
+				exit(-1);
+			}
+
+			if(frsky_parse_buffer(&fs, &td, buf, n)) {
+				#ifdef RENDER
+				render(&td, &rd);
+				#endif
+			}
 		}
-
-		if(n<0) {
-			perror("read");
-			exit(-1);
-		}
-
-		if(frsky_parse_buffer(&fs, &td, buf, n)) {
+		else {
 			#ifdef RENDER
 			render(&td, &rd);
 			#endif

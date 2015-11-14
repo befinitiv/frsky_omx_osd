@@ -17,7 +17,7 @@ vgfont:
 %.o: %.c
 	gcc -c -o $@ $< $(CPPFLAGS)
 
-frsky_omx_osd: main.o frsky.o render.o
+frsky_omx_osd: main.o frsky.o render.o telemetry.o
 	gcc -o $@ $^ $(LDFLAGS)
 
 
